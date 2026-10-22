@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PiBLITZ TETRIS — Pioneer Arcade Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Orbitron for Arcade Headers, Plus Jakarta Sans for UI, JetBrains Mono for Numbers -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;800&family=Orbitron:wght@700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --pi-bg-deep: #120524;
+            --pi-bg-mid: #230b42;
+            --pi-purple: #6d28d9;
+            --pi-gold: #fbbf24;
+            --pi-gold-bright: #fde047;
+            --pi-amber: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at 50% 15%, #3b136c 0%, #1b0836 50%, #0d031a 100%);
+            color: #ffffff;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .font-arcade {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Glassmorphism Pi Panels */
+        .pi-glass {
+            background: linear-gradient(145deg, rgba(58, 22, 104, 0.72) 0%, rgba(26, 9, 51, 0.85) 100%);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(251, 191, 36, 0.28);
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+        }
+
+        .pi-glass-gold {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.18) 0%, rgba(124, 58, 237, 0.25) 100%);
+            border: 1px solid rgba(251, 191, 36, 0.55);
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.2);
+        }
+
+        /* Neon Gold Text Glow */
+        .gold-glow {
+            text-shadow: 0 0 12px rgba(251, 191, 36, 0.7), 0 0 25px rgba(245, 158, 11, 0.4);
+        }
+
+        .purple-glow {
+            text-shadow: 0 0 12px rgba(192, 132, 252, 0.8), 0 0 24px rgba(147, 51, 234, 0.5);
+        }
+
+        /* Arcade Buttons */
+        .btn-pi-gold {
+            background: linear-gradient(180deg, #fde047 0%, #f59e0b 55%, #d97706 100%);
+            color: #1e0b36;
+            font-weight: 800;
+            border: 2px solid #fef08a;
+            box-shadow: 0 4px 0 #92400e, 0 8px 20px rgba(245, 158, 11, 0.45);
+            transition: all 0.12s ease;
+        }
+        .btn-pi-gold:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 0 #92400e, 0 12px 25px rgba(251, 191, 36, 0.65);
+            filter: brightness(1.06);
+        }
+        .btn-pi-gold:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #92400e, 0 4px 10px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-pi-purple {
+            background: linear-gradient(180deg, #7c3aed 0%, #5b21b6 60%, #4c1d95 100%);
+            color: #ffffff;
+            font-weight: 700;
+            border: 1px solid rgba(216, 180, 254, 0.5);
+            box-shadow: 0 4px 0 #2e1065, 0 6px 16px rgba(109, 40, 217, 0.4);
+            transition: all 0.12s ease;
+        }
+        .btn-pi-purple:hover {
+            transform: translateY(-1px);
+            border-color: #fbbf24;
+        }
+        .btn-pi-purple:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #2e1065;
+        }
+
+        /* Touch Pad Controls */
+        .touch-btn {
+            background: linear-gradient(180deg, rgba(109, 40, 217, 0.75) 0%, rgba(59, 7, 100, 0.9) 100%);
+            border: 1.5px solid rgba(251, 191, 36, 0.45);
+            box-shadow: 0 4px 0 rgba(25, 6, 48, 0.95), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+            transition: transform 0.06s ease, background 0.1s ease;
+            touch-action: manipulation;
+        }
+        .touch-btn:active, .touch-btn.active-press {
+            transform: translateY(3px) scale(0.96);
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            color: #1e0b36;
+            border-color: #fef08a;
+            box-shadow: 0 1px 0 rgba(25, 6, 48, 0.95);
+        }
+
+        /* Board Shake Effect on Hard Drop / Tetris / T-Spin */
+        @keyframes boardBump {
+            0% { transform: translateY(0px); }
+            35% { transform: translateY(6px); }
+            70% { transform: translateY(-2px); }
+            100% { transform: translateY(0px); }
+        }
+        .board-drop-bump {
+            animation: boardBump 0.16s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
+
+        @keyframes boardTspinPulse {
+            0% { box-shadow: 0 0 0px #fbbf24, inset 0 0 0px #c026d3; }
+            40% { box-shadow: 0 0 38px #fbbf24, 0 0 65px #d946ef, inset 0 0 25px rgba(251, 191, 36, 0.5); border-color: #fde047; }
+            100% { box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6); }
+        }
+        .board-tspin-glow {
+            animation: boardTspinPulse 0.65s ease-out;
+        }
+
+        /* Floating Tetris Battle Action Banner */
+        @keyframes calloutPop {
+            0% { opacity: 0; transform: scale(0.3) translateY(20px) rotate(-6deg); }
+            25% { opacity: 1; transform: scale(1.15) translateY(-6px) rotate(2deg); }
+            45% { transform: scale(0.96) translateY(0px) rotate(0deg); }
+            80% { opacity: 1; transform: scale(1.02) translateY(-12px); }
+            100% { opacity: 0; transform: scale(0.85) translateY(-35px); }
+        }
+        .action-callout-anim {
+            animation: calloutPop 1.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        /* Floating Pi Background Symbols */
+        .bg-pi-symbol {
+            position: fixed;
+            color: rgba(251, 191, 36, 0.04);
+            font-family: 'Orbitron', sans-serif;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Custom Scrollbar for Modals */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1a0633;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #fbbf24;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between min-h-screen relative selection:bg-amber-400 selection:text-purple-950">
+
+    <!-- Ambient Decorative Background Pi Watermarks -->
+    <div class="bg-pi-symbol text-[18rem] -top-16 -left-12 rotate-[-15deg]">π</div>
+    <div class="bg-pi-symbol text-[22rem] bottom-0 -right-14 rotate-[12deg]">π</div>
+
+    <!-- TOP NAVIGATION / PI NETWORK PIONEER HEADER -->
+    <header class="relative z-20 w-full px-3 sm:px-6 py-2.5 border-b border-amber-400/25 bg-[#16062c]/90 backdrop-blur-md">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2">
+            <!-- Brand Emblem -->
+            <div class="flex items-center gap-2.5 sm:gap-3">
+                <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-amber-300 via-amber-500 to-purple-700 p-0.5 shadow-lg shadow-amber-500/30 flex items-center justify-center">
+                    <div class="w-full h-full bg-[#1e083a] rounded-[10px] flex items-center justify-center">
+                        <span class="text-2xl sm:text-3xl font-extrabold text-amber-400 font-arcade gold-glow leading-none">π</span>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h1 class="font-arcade font-black text-base sm:text-xl tracking-wider text-white">
+                            Pi<span class="text-amber-400 gold-glow">BLITZ</span> <span class="text-purple-300 text-xs sm:text-sm font-bold">TETRIS</span>
+                        </h1>
+                        <span class="hidden md:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                            <i class="fa-solid fa-bolt text-amber-400"></i> Pioneer App
+                        </span>
+                    </div>
+                    <p class="text-[10px] sm:text-xs text-purple-300/80 font-medium">
+                        SRS T-Spin Arcade • Pi Domain Ecosystem Ready
+                    </p>
+                </div>
+            </div>
+
+            <!-- Action Controls & Status -->
+            <div class="flex items-center gap-1.5 sm:gap-2.5">
+                <!-- T-Spin Dojo / Guide Modal Trigger -->
+                <button id="btnTspinGuide" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold bg-purple-900/80 hover:bg-purple-800 text-amber-300 border border-amber-400/40 transition flex items-center gap-1.5 shadow-sm">
+                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i>
+                    <span class="hidden sm:inline">T-Spin Tricks</span>
+                    <span class="sm:hidden">T-Spin</span>
+                </button>
+
+                <!-- GitHub & Domain Verification Info Trigger -->
+                <button id="btnDomainInfo" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/50 transition flex items-center gap-1.5">
+                    <i class="fa-brands fa-github text-amber-400"></i>
+                    <span class="hidden sm:inline">Domain & GitHub Guide</span>
+                    <span class="sm:hidden">Deploy</span>
+                </button>
+
+                <!-- Audio Mute / Unmute -->
+                <button id="btnSoundToggle" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-purple-900/70 hover:bg-purple-800 border border-purple-400/30 text-amber-300 flex items-center justify-center transition" title="Toggle Arcade Audio">
+                    <i id="soundIcon" class="fa-solid fa-volume-high text-sm"></i>
+                </button>
+
+                <!-- Pause Button -->
+                <button id="btnPauseToggle" class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-purple-900/70 hover:bg-purple-800 border border-purple-400/30 text-white flex items-center justify-center transition" title="Pause Game (P)">
+                    <i id="pauseIcon" class="fa-solid fa-pause text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN ARCADE ARENA -->
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-2 sm:px-4 py-2 sm:py-4 max-w-6xl mx-auto w-full">
+
+        <!-- TETRIS BATTLE STYLE STAR & MINING PROGRESS BAR -->
+        <div class="w-full max-w-3xl mb-2.5 sm:mb-3 pi-glass rounded-2xl px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+            <!-- Pioneer Rank & Stars -->
+            <div class="flex items-center gap-2.5">
+                <div class="flex items-center gap-1 bg-purple-950/90 px-2.5 py-1 rounded-xl border border-amber-400/40">
+                    <i class="fa-solid fa-crown text-amber-400 text-xs sm:text-sm"></i>
+                    <span id="pioneerRankTitle" class="text-xs font-extrabold text-amber-300 tracking-wide">PIONEER MINER</span>
+                </div>
+                <div id="starContainer" class="flex items-center gap-1 text-amber-400 text-sm sm:text-base" title="Tetris Battle Stars Earned">
+                    <i class="fa-solid fa-star drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]"></i>
+                    <i class="fa-regular fa-star text-amber-400/40"></i>
+                    <i class="fa-regular fa-star text-amber-400/40"></i>
+                    <i class="fa-regular fa-star text-amber-400/40"></i>
+                    <i class="fa-regular fa-star text-amber-400/40"></i>
+                </div>
+            </div>
+
+            <!-- Pi Mining Hashrate / Blitz Meter Bar -->
+            <div class="flex-1 min-w-[160px] max-w-xs flex items-center gap-2">
+                <span class="text-[11px] font-bold text-purple-200 whitespace-nowrap flex items-center gap-1">
+                    <span class="text-amber-400 font-arcade">π</span> BLITZ:
+                </span>
+                <div class="w-full h-3 bg-purple-950 rounded-full overflow-hidden p-0.5 border border-purple-500/40">
+                    <div id="blitzProgressBar" class="h-full rounded-full bg-gradient-to-r from-purple-500 via-pink-500 to-amber-400 transition-all duration-300" style="width: 15%"></div>
+                </div>
+                <span id="koCounterBadge" class="px-2 py-0.5 rounded-md bg-rose-600/30 border border-rose-400/50 text-[10px] font-extrabold text-rose-300 whitespace-nowrap">
+                    BURST: 0
+                </span>
+            </div>
+        </div>
+
+        <!-- CORE GAMEPLAY GRID: Left Panel (Hold & Stats) | Center Board | Right Panel (Next & T-Spin Lab) -->
+        <div class="w-full max-w-4xl grid grid-cols-12 gap-2 sm:gap-4 items-start">
+
+            <!-- LEFT COLUMN: HOLD PIECE & SCORE STATS (Desktop Left, Mobile Top-Row Compact) -->
+            <div class="col-span-3 sm:col-span-3 flex flex-col gap-2 sm:gap-3">
+                <!-- HOLD PIECE BOX -->
+                <div class="pi-glass rounded-2xl p-2 sm:p-3 flex flex-col items-center relative overflow-hidden">
+                    <div class="w-full flex items-center justify-between mb-1">
+                        <span class="font-arcade text-[10px] sm:text-xs font-extrabold tracking-wider text-amber-300">HOLD</span>
+                        <span class="text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded bg-purple-900/90 text-purple-300 border border-purple-500/30 font-mono-num">C / SHIFT</span>
+                    </div>
+                    <div class="bg-[#110422]/90 rounded-xl border border-purple-500/30 p-1 flex items-center justify-center w-full aspect-square max-w-[92px]">
+                        <canvas id="holdCanvas" width="88" height="88" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+
+                <!-- SCORE /PI MINED / LEVEL / LINES -->
+                <div class="pi-glass rounded-2xl p-2 sm:p-3.5 flex flex-col gap-2 sm:gap-2.5">
+                    <div>
+                        <div class="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-purple-300">SCORE</div>
+                        <div id="scoreVal" class="font-mono-num text-sm sm:text-xl font-extrabold text-white tracking-tight">0</div>
+                    </div>
+
+                    <div class="border-t border-purple-500/20 pt-1.5">
+                        <div class="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1">
+                            <span>π MINED</span>
+                        </div>
+                        <div id="piMinedVal" class="font-mono-num text-xs sm:text-lg font-extrabold text-amber-400 gold-glow">0.00 π</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-1.5 border-t border-purple-500/20 pt-1.5">
+                        <div>
+                            <div class="text-[9px] sm:text-[10px] font-bold text-purple-300">LEVEL</div>
+                            <div id="levelVal" class="font-mono-num text-xs sm:text-base font-extrabold text-white">1</div>
+                        </div>
+                        <div>
+                            <div class="text-[9px] sm:text-[10px] font-bold text-purple-300">LINES</div>
+                            <div id="linesVal" class="font-mono-num text-xs sm:text-base font-extrabold text-cyan-300">0</div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-purple-500/20 pt-1.5">
+                        <div class="text-[9px] sm:text-[10px] font-bold text-purple-300">T-SPINS</div>
+                        <div id="tspinsVal" class="font-mono-num text-xs sm:text-base font-extrabold text-fuchsia-400">0</div>
+                    </div>
+                </div>
+
+                <!-- INSTant T-SPIN PRACTICE SPAWNER (Great for testing Facebook Tetris Battle T-Spins!) -->
+                <div class="pi-glass-gold rounded-2xl p-2 sm:p-3 flex flex-col gap-1.5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] sm:text-xs font-extrabold text-amber-300 flex items-center gap-1">
+                            <i class="fa-solid fa-fire-flame-curved"></i> T-SPIN LAB
+                        </span>
+                    </div>
+                    <p class="hidden sm:block text-[10px] text-purple-200 leading-tight">
+                        Load a classic T-Spin Double overhang to test SRS twists!
+                    </p>
+                    <button id="btnLoadTspinSetup" class="w-full py-1.5 px-2 rounded-xl btn-pi-gold text-[10px] sm:text-xs font-extrabold flex items-center justify-center gap-1 shadow-md">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span>Setup T-Spin</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- CENTER COLUMN: MAIN TETRIS BATTLE BOARD + VERTICAL BLITZ METER -->
+            <div class="col-span-6 sm:col-span-6 flex flex-col items-center justify-center relative">
+                <div id="boardWrapper" class="pi-glass p-1.5 sm:p-2.5 rounded-2xl relative flex items-stretch gap-1.5 sm:gap-2 shadow-2xl">
+
+                    <!-- Left Vertical Fever / Blitz Gauge (Tetris Battle Style) -->
+                    <div class="w-2.5 sm:w-3.5 bg-[#0e031c] rounded-full border border-purple-500/40 p-0.5 flex flex-col justify-end overflow-hidden relative">
+                        <div id="verticalFeverBar" class="w-full rounded-full bg-gradient-to-t from-amber-500 via-fuchsia-500 to-cyan-400 transition-all duration-300 shadow-[0_0_12px_#fbbf24]" style="height: 12%;"></div>
+                    </div>
+
+                    <!-- Main 10x20 Playfield Canvas Container -->
+                    <div class="relative rounded-xl overflow-hidden border-2 border-amber-400/50 bg-[#0b0217] shadow-inner">
+                        <canvas id="gameCanvas" width="300" height="600" class="block w-[175px] h-[350px] xs:w-[210px] xs:h-[420px] sm:w-[270px] sm:h-[540px] md:w-[290px] md:h-[580px]"></canvas>
+
+                        <!-- Floating Action Callouts Layer (T-SPIN DOUBLE!, TETRIS!, COMBO x4!, B2B!) -->
+                        <div id="calloutOverlay" class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center z-20 overflow-hidden px-2"></div>
+
+                        <!-- Start / Pause / Game Over Interactive Overlay -->
+                        <div id="boardModalOverlay" class="absolute inset-0 bg-[#120424]/88 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center z-30">
+                            <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-amber-300 via-amber-500 to-purple-700 p-0.5 mb-3 shadow-xl shadow-amber-500/25 flex items-center justify-center">
+                                <div class="w-full h-full bg-[#1a0633] rounded-[14px] flex items-center justify-center">
+                                    <span class="text-3xl sm:text-4xl font-black font-arcade text-amber-400 gold-glow">π</span>
+                                </div>
+                            </div>
+                            <h2 id="overlayTitle" class="font-arcade text-lg sm:text-2xl font-black text-white tracking-wide mb-1">
+                                Pi<span class="text-amber-400 gold-glow">BLITZ</span> TETRIS
+                            </h2>
+                            <p id="overlaySubtitle" class="text-xs sm:text-sm text-purple-200 max-w-[230px] mb-4">
+                                Twist T-pieces into tight corners for <span class="text-amber-300 font-bold">T-Spin Doubles</span> &amp; mine bonus π!
+                            </p>
+
+                            <!-- Final Score Box (Hidden initially, shown on Game Over) -->
+                            <div id="finalScoreBox" class="hidden w-full max-w-[210px] bg-purple-950/90 border border-amber-400/40 rounded-xl p-2.5 mb-4">
+                                <div class="text-[10px] uppercase tracking-wider text-purple-300 font-bold">FINAL PIONEER SCORE</div>
+                                <div id="finalScoreVal" class="font-mono-num text-xl font-black text-amber-400 gold-glow">0</div>
+                                <div id="finalPiVal" class="text-xs font-bold text-fuchsia-300 mt-0.5">+0.00 π Mined</div>
+                            </div>
+
+                            <div class="flex flex-col gap-2 w-full max-w-[200px]">
+                                <button id="btnStartGame" class="w-full py-2.5 px-4 rounded-xl btn-pi-gold font-arcade text-xs sm:text-sm tracking-wider uppercase flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-play"></i>
+                                    <span id="btnStartText">START MINING</span>
+                                </button>
+                                <button id="btnPracticeTspinStart" class="w-full py-2 px-3 rounded-xl btn-pi-purple text-xs font-bold flex items-center justify-center gap-1.5">
+                                    <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+                                    <span>Start w/ T-Spin Setup</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: NEXT 3 PIECES QUEUE & LIVE ACTION FEED -->
+            <div class="col-span-3 sm:col-span-3 flex flex-col gap-2 sm:gap-3">
+                <!-- NEXT 3 PIECES QUEUE -->
+                <div class="pi-glass rounded-2xl p-2 sm:p-3 flex flex-col items-center">
+                    <div class="w-full flex items-center justify-between mb-1">
+                        <span class="font-arcade text-[10px] sm:text-xs font-extrabold tracking-wider text-amber-300">NEXT</span>
+                        <span class="text-[9px] text-purple-300 font-bold">7-BAG</span>
+                    </div>
+                    <div class="bg-[#110422]/90 rounded-xl border border-purple-500/30 p-1 flex items-center justify-center w-full max-w-[92px]">
+                        <canvas id="nextCanvas" width="88" height="215" class="w-full h-auto"></canvas>
+                    </div>
+                </div>
+
+                <!-- LIVE COMBO / BACK-TO-BACK BADGE PANEL -->
+                <div class="pi-glass rounded-2xl p-2 sm:p-3 flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-purple-300">CHAIN STATUS</span>
+                    </div>
+
+                    <!-- Back to Back Indicator -->
+                    <div id="b2bBadge" class="px-2 py-1.5 rounded-xl bg-purple-950/80 border border-purple-500/30 flex items-center justify-between opacity-50 transition-all">
+                        <span class="text-[10px] font-extrabold text-amber-300">B2B CHAIN</span>
+                        <span id="b2bCountVal" class="font-mono-num text-xs font-black text-white">x0</span>
+                    </div>
+
+                    <!-- Combo Indicator -->
+                    <div id="comboBadge" class="px-2 py-1.5 rounded-xl bg-purple-950/80 border border-purple-500/30 flex items-center justify-between opacity-50 transition-all">
+                        <span class="text-[10px] font-extrabold text-cyan-300">COMBO</span>
+                        <span id="comboCountVal" class="font-mono-num text-xs font-black text-white">0</span>
+                    </div>
+
+                    <!-- Last Trick Performed -->
+                    <div class="bg-[#110422]/90 rounded-xl p-2 border border-purple-500/25 text-center">
+                        <div class="text-[9px] text-purple-400 font-bold uppercase">LAST TRICK</div>
+                        <div id="lastTrickText" class="text-[10px] sm:text-xs font-extrabold text-amber-300 truncate mt-0.5">
+                            READY!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DESKTOP KEYBOARD SHORTCUTS CARD (Hidden on small screens) -->
+                <div class="hidden md:flex pi-glass rounded-2xl p-3 flex-col gap-1.5 text-[11px] text-purple-200">
+                    <div class="font-arcade text-[10px] font-bold text-amber-300 mb-0.5">CONTROLS</div>
+                    <div class="flex justify-between"><span>Move:</span><span class="font-mono-num text-white">← → / A D</span></div>
+                    <div class="flex justify-between"><span>Rotate CW:</span><span class="font-mono-num text-white">↑ / X / W</span></div>
+                    <div class="flex justify-between"><span>Rotate CCW:</span><span class="font-mono-num text-amber-300">Z / CTRL</span></div>
+                    <div class="flex justify-between"><span>Soft Drop:</span><span class="font-mono-num text-white">↓ / S</span></div>
+                    <div class="flex justify-between"><span>Hard Drop:</span><span class="font-mono-num text-amber-300">SPACE</span></div>
+                    <div class="flex justify-between"><span>Hold Piece:</span><span class="font-mono-num text-cyan-300">C / SHIFT</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ON-SCREEN ARCADE TOUCH CONTROLS (Responsive for Mobile, Pi Browser & Tablet/Desktop Click) -->
+        <div class="w-full max-w-xl mt-3 sm:mt-4 grid grid-cols-6 gap-1.5 sm:gap-2.5 px-1">
+            <button id="touchLeft" class="touch-btn rounded-2xl py-3 sm:py-3.5 flex flex-col items-center justify-center text-white select-none" aria-label="Move Left">
+                <i class="fa-solid fa-arrow-left text-base sm:text-lg"></i>
+                <span class="text-[9px] font-bold text-purple-200 mt-0.5">LEFT</span>
+            </button>
+
+            <button id="touchRight" class="touch-btn rounded-2xl py-3 sm:py-3.5 flex flex-col items-center justify-center text-white select-none" aria-label="Move Right">
+                <i class="fa-solid fa-arrow-right text-base sm:text-lg"></i>
+                <span class="text-[9px] font-bold text-purple-200 mt-0.5">RIGHT</span>
+            </button>
+
+            <button id="touchSoftDrop" class="touch-btn rounded-2xl py-3 sm:py-3.5 flex flex-col items-center justify-center text-white select-none" aria-label="Soft Drop">
+                <i class="fa-solid fa-angles-down text-base sm:text-lg text-cyan-300"></i>
+                <span class="text-[9px] font-bold text-purple-200 mt-0.5">DOWN</span>
+            </button>
+
+            <button id="touchRotateCCW" class="touch-btn rounded-2xl py-3 sm:py-3.5 flex flex-col items-center justify-center text-white select-none" aria-label="Rotate Counter-Clockwise">
+                <i class="fa-solid fa-rotate-left text-base sm:text-lg text-fuchsia-300"></i>
+                <span class="text-[9px] font-bold text-purple-200 mt-0.5">SPIN L</span>
+            </button>
+
+            <button id="touchRotateCW" class="touch-btn rounded-2xl py-3 sm:py-3.5 flex flex-col items-center justify-center text-white select-none" aria-label="Rotate Clockwise">
+                <i class="fa-solid fa-rotate-right text-base sm:text-lg text-amber-300"></i>
+                <span class="text-[9px] font-bold text-purple-200 mt-0.5">SPIN R</span>
+            </button>
+
+            <button id="touchHardDrop" class="touch-btn rounded-2xl py-3 sm:py-3.5 flex flex-col items-center justify-center text-amber-300 border-amber-400/80 select-none" aria-label="Hard Drop">
+                <i class="fa-solid fa-bolt text-base sm:text-lg"></i>
+                <span class="text-[9px] font-extrabold text-amber-200 mt-0.5">DROP</span>
+            </button>
+        </div>
+
+        <!-- Secondary Mobile Utility Row (Hold Piece + Reset + T-Spin Preset) -->
+        <div class="w-full max-w-xl mt-1.5 flex items-center justify-between gap-2 px-1">
+            <button id="touchHold" class="flex-1 py-2 rounded-xl bg-purple-900/75 hover:bg-purple-800 border border-amber-400/40 text-xs font-extrabold text-amber-300 flex items-center justify-center gap-1.5 active:scale-95 transition">
+                <i class="fa-solid fa-retweet"></i> HOLD PIECE (C)
+            </button>
+            <button id="touchTspinPreset" class="flex-1 py-2 rounded-xl bg-fuchsia-900/60 hover:bg-fuchsia-800/80 border border-fuchsia-400/40 text-xs font-extrabold text-fuchsia-200 flex items-center justify-center gap-1.5 active:scale-95 transition">
+                <i class="fa-solid fa-wand-sparkles text-amber-300"></i> T-SPIN PRACTICE
+            </button>
+            <button id="touchRestart" class="py-2 px-3.5 rounded-xl bg-rose-900/60 hover:bg-rose-800 border border-rose-400/40 text-xs font-bold text-rose-200 flex items-center justify-center gap-1 active:scale-95 transition" title="Restart Game">
+                <i class="fa-solid fa-rotate-right"></i>
+            </button>
+        </div>
+    </main>
+
+    <!-- FOOTER WITH PIONEER APP DOMAIN VERIFICATION STATUS -->
+    <footer class="relative z-10 w-full py-2 px-4 text-center border-t border-purple-500/20 bg-[#0e031d]/80 text-[11px] text-purple-300/80 flex flex-wrap items-center justify-center gap-3">
+        <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <strong class="text-amber-300">Pi Ecosystem App Ready</strong> — Single-File HTML5 Canvas
+        </span>
+        <span class="hidden sm:inline">•</span>
+        <span>SRS Wall Kicks &amp; 3-Corner T-Spin Engine</span>
+    </footer>
+
+    <!-- MODAL 1: T-SPIN TRICKS DOJO & SRS GUIDE -->
+    <div id="modalTspinGuide" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="pi-glass max-w-lg w-full rounded-3xl p-5 sm:p-6 border border-amber-400/50 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-purple-500/30 pb-3 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-lg bg-amber-400/20 border border-amber-400 flex items-center justify-center text-amber-300">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </span>
+                    <h3 class="font-arcade text-base sm:text-lg font-black text-white">
+                        FACEBOOK TETRIS BATTLE <span class="text-amber-400">T-SPIN GUIDE</span>
+                    </h3>
+                </div>
+                <button id="closeTspinGuide" class="w-8 h-8 rounded-lg bg-purple-900/80 text-purple-200 hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs sm:text-sm text-purple-100 leading-relaxed">
+                <div class="p-3.5 rounded-2xl bg-purple-950/90 border border-amber-400/30">
+                    <div class="font-extrabold text-amber-300 mb-1 flex items-center gap-1.5">
+                        <i class="fa-solid fa-star"></i> How T-Spins Work in PiBLITZ:
+                    </div>
+                    <p class="text-purple-200 text-xs">
+                        Just like classic <strong>Facebook Tetris Battle</strong>, PiBLITZ uses the official <strong>Super Rotation System (SRS)</strong> with Wall &amp; Floor Kicks and the <strong>3-Corner T-Spin Rule</strong>!When you rotate a purple <strong class="text-fuchsia-300">T-Piece</strong> into a tight slot where at least <strong>3 of the 4 diagonal corners</strong> around its center are filled, you trigger a massive <strong class="text-amber-300">T-SPIN!</strong>
+                    </p>
+                </div>
+
+                <!-- Visual ASCII/Grid Diagram of T-Spin Double Setup -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-[#110422] p-3 rounded-2xl border border-purple-500/30">
+                        <div class="text-xs font-extrabold text-fuchsia-300 mb-1">1. Build the Overhang</div>
+                        <p class="text-[11px] text-purple-300 mb-2">Leave a T-shaped cavity with 1 block overhanging the top corner:</p>
+                        <div class="font-mono-num text-xs leading-tight bg-black/50 p-2 rounded-lg text-center tracking-widest">
+                            <span class="text-amber-400">██</span><span class="text-purple-900">░░░</span><span class="text-cyan-400">███</span><br>
+                            <span class="text-emerald-400">███</span><span class="text-purple-900">░</span><span class="text-rose-400">████</span><br>
+                            <span class="text-blue-400">██</span><span class="text-purple-900">░░░</span><span class="text-orange-400">███</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#110422] p-3 rounded-2xl border border-purple-500/30">
+                        <div class="text-xs font-extrabold text-amber-300 mb-1">2. Soft Drop &amp; Spin!</div>
+                        <p class="text-[11px] text-purple-300 mb-2">Soft drop the T-piece beside the overhang, then press <strong>Rotate (↑ / Z)</strong>:</p>
+                        <div class="font-mono-num text-xs leading-tight bg-black/50 p-2 rounded-lg text-center tracking-widest">
+                            <span class="text-amber-400">██</span><span class="text-purple-900">░░░</span><span class="text-cyan-400">███</span><br>
+                            <span class="text-emerald-400">███</span><span class="text-fuchsia-400">█</span><span class="text-rose-400">████</span><br>
+                            <span class="text-blue-400">██</span><span class="text-fuchsia-400">███</span><span class="text-orange-400">███</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scoring & Rewards Table -->
+                <div class="bg-purple-950/70 rounded-2xl p-3 border border-purple-500/30">
+                    <div class="font-bold text-amber-300 text-xs mb-2">TRICK REWARDS &amp; PI BONUS</div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <div class="flex justify-between bg-black/30 px-2.5 py-1.5 rounded-lg">
+                            <span>T-Spin Mini</span>
+                            <span class="font-mono-num text-amber-300 font-bold">+200 pts</span>
+                        </div>
+                        <div class="flex justify-between bg-black/30 px-2.5 py-1.5 rounded-lg">
+                            <span>T-Spin Single</span>
+                            <span class="font-mono-num text-amber-300 font-bold">+800 pts</span>
+                        </div>
+                        <div class="flex justify-between bg-black/30 px-2.5 py-1.5 rounded-lg">
+                            <span>T-Spin Double</span>
+                            <span class="font-mono-num text-amber-300 font-bold">+1,200 pts</span>
+                        </div>
+                        <div class="flex justify-between bg-black/30 px-2.5 py-1.5 rounded-lg">
+                            <span>T-Spin Triple</span>
+                            <span class="font-mono-num text-fuchsia-300 font-bold">+1,600 pts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2">
+                    <button id="btnTryTspinFromModal" class="w-full py-2.5 rounded-xl btn-pi-gold text-xs sm:text-sm font-arcade uppercase">
+                        Load T-Spin Practice Board Now!
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: GITHUB & DOMAIN CLAIM DEPLOYMENT GUIDE -->
+    <div id="modalDomainInfo" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="pi-glass max-w-lg w-full rounded-3xl p-5 sm:p-6 border border-amber-400/50 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-purple-500/30 pb-3 mb-4">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-lg bg-amber-400/20 border border-amber-400 flex items-center justify-center text-amber-300">
+                        <i class="fa-brands fa-github"></i>
+                    </span>
+                    <h3 class="font-arcade text-base sm:text-lg font-black text-white">
+                        GITHUB &amp; <span class="text-amber-400">DOMAIN SETUP</span>
+                    </h3>
+                </div>
+                <button id="closeDomainInfo" class="w-8 h-8 rounded-lg bg-purple-900/80 text-purple-200 hover:text-white flex items-center justify-center">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3.5 text-xs sm:text-sm text-purple-100 leading-relaxed">
+                <p class="text-purple-200">
+                    This entire <strong>PiBLITZ TETRIS</strong> game is self-contained inside a single <code class="px-1.5 py-0.5 rounded bg-purple-950 text-amber-300 font-mono-num">index.html</code> file with zero external build dependencies—making it effortless to host on GitHub Pages and link to your custom domain!
+                </p>
+
+                <div class="space-y-2.5">
+                    <div class="p-3 rounded-2xl bg-purple-950/80 border border-purple-500/30">
+                        <div class="font-extrabold text-amber-300 mb-1">Step 1: Upload to GitHub</div>
+                        <ol class="list-decimal list-inside text-xs text-purple-200 space-y-1">
+                            <li>Create a new public repository on GitHub (e.g., <code class="text-white">piblitz-tetris</code>).</li>
+                            <li>Save this code as <code class="text-amber-300 font-bold">index.html</code> and upload it to the root of your repository.</li>
+                            <li>Commit your changes to the <code class="text-white">main</code> branch.</li>
+                        </ol>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-purple-950/80 border border-purple-500/30">
+                        <div class="font-extrabold text-amber-300 mb-1">Step 2: Enable GitHub Pages &amp; Custom Domain</div>
+                        <ol class="list-decimal list-inside text-xs text-purple-200 space-y-1">
+                            <li>Go to your repository <strong>Settings → Pages</strong>.</li>
+                            <li>Under <strong>Build and deployment</strong>, select <strong>Deploy from a branch</strong> and choose <code class="text-white">main</code> / <code class="text-white">/(root)</code>.</li>
+                            <li>Under <strong>Custom domain</strong>, enter your domain name and click <strong>Save</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="p-3 rounded-2xl bg-purple-950/80 border border-amber-400/40">
+                        <div class="font-extrabold text-emerald-300 mb-1 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check"></i> Step 3: DNS Records for Your Domain
+                        </div>
+                        <p class="text-[11px] text-purple-200 mb-2">
+                            Point your domain's DNS <code class="text-amber-300">A</code> records to GitHub Pages IP addresses or a <code class="text-amber-300">CNAME</code> to <code class="text-white">yourusername.github.io</code>:
+                        </p>
+                        <div class="font-mono-num text-[11px] bg-black/50 p-2.5 rounded-xl text-amber-200 select-all">
+                            185.199.108.153<br>
+                            185.199.109.153<br>
+                            185.199.110.153<br>
+                            185.199.111.153
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btnCloseDomainBottom" class="w-full py-2.5 rounded-xl btn-pi-gold text-xs font-arcade uppercase">
+                    Got It — Back to Game
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPLETE GAME ENGINE, SRS ROTATION, T-SPIN DETECTOR & WEB AUDIO SYNTH -->
+    <script>
+        /**************************************************************************
+         * 1. WEB AUDIO SYNTHESIZER (Arcade Sound Effects without External Assets)
+         **************************************************************************/
+        class PiArcadeAudio {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) {
+                        this.ctx = new AudioCtx();
+                    }
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            toggleMute() {
+                this.muted = !this.muted;
+                return this.muted;
+            }
+
+            playTone(freq, type = 'sine', duration = 0.08, vol = 0.12, slideTo = null) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, now);
+                    if (slideTo) {
+                        osc.frequency.exponentialRampToValueAtTime(slideTo, now + duration);
+                    }
+
+                    gain.gain.setValueAtTime(vol, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start(now);
+                    osc.stop(now + duration);
+                } catch (e) {
+                    // Ignore audio context restrictions if not interacted yet
+                }
+            }
+
+            move() {
+                this.playTone(290, 'triangle', 0.045, 0.08, 340);
+            }
+
+            rotate(isTspinSpot = false) {
+                if (isTspinSpot) {
+                    // Special metallic click-chime when T-piece twists into a 3-corner T-Spin pocket!
+                    this.playTone(587.33, 'sine', 0.09, 0.16, 880);
+                    setTimeout(() => this.playTone(1174.66, 'triangle', 0.14, 0.18, 1318.5), 45);
+                } else {
+                    this.playTone(440, 'sine', 0.065, 0.1, 620);
+                }
+            }
+
+            softDrop() {
+                this.playTone(210, 'sine', 0.03, 0.05);
+            }
+
+            hardDrop() {
+                this.playTone(165, 'square', 0.11, 0.14, 58);
+            }
+
+            hold() {
+                this.playTone(392, 'sine', 0.07, 0.1, 523.25);
+            }
+
+            lineClear(lines, combo = 0, isTspin = false) {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+
+                // Base combo pitch multiplier (like Facebook Tetris Battle ascending combo chimes!)
+                const comboSemitones = Math.min(combo, 12);
+                const pitchShift = Math.pow(1.059463, comboSemitones);
+
+                if (isTspin) {
+                    // Energetic T-Spin Fanfare Chord
+                    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
+                    notes.forEach((n, idx) => {
+                        setTimeout(() => {
+                            this.playTone(n * pitchShift, 'triangle', 0.22, 0.16);
+                        }, idx * 55);
+                    });
+                } else if (lines >= 4) {
+                    // TETRIS 4-Line Golden Fanfare
+                    const notes = [440, 554.37, 659.25, 880];
+                    notes.forEach((n, idx) => {
+                        setTimeout(() => {
+                            this.playTone(n * pitchShift, 'square', 0.2, 0.13);
+                        }, idx * 60);
+                    });
+                } else {
+                    // Standard 1-3 line clear + ascending combo chime
+                    const baseNotes = [392, 493.88, 587.33];
+                    for (let i = 0; i < Math.min(lines, 3); i++) {
+                        setTimeout(() => {
+                            this.playTone(baseNotes[i] * pitchShift, 'triangle', 0.15, 0.13);
+                        }, i * 50);
+                    }
+                }
+            }
+
+            gameOver() {
+                const notes = [392, 349.23, 329.63, 261.63];
+                notes.forEach((n, idx) => {
+                    setTimeout(() => this.playTone(n, 'sawtooth', 0.25, 0.12), idx * 140);
+                });
+            }
+        }
+
+        const sound = new PiArcadeAudio();
+
+        /**************************************************************************
+         * 2. TETROMINO DEFINITIONS & SUPER ROTATION SYSTEM (SRS) WALL KICK TABLES
+         **************************************************************************/
+        const COLS = 10;
+        const ROWS = 20;
+        const HIDDEN_ROWS = 2; // Extra top buffer rows for spawning and high kicks
+
+        // Piece Definitions in all 4 rotation states (0: North, 1: East, 2: South, 3: West)
+        // Ensures true center axis rotation for SRS and exact 3-corner T-Spin detection
+        const PIECES = {
+            I: {
+                id: 'I',
+                color: '#06b6d4',       // Cyan Base
+                light: '#67e8f9',       // Gloss Highlight
+                dark: '#0e7490',        // Bevel Shadow
+                glow: 'rgba(6, 182, 212, 0.6)',
+                states: [
+                    [
+                        [0, 0, 0, 0],
+                        [1, 1, 1, 1],
+                        [0, 0, 0, 0],
+                        [0, 0, 0, 0]
+                    ],
+                    [
+                        [0, 0, 1, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 1, 0],
+                        [0, 0, 1, 0]
+                    ],
+                    [
+                        [0, 0, 0, 0],
+                        [0, 0, 0, 0],
+                        [1, 1, 1, 1],
+                        [0, 0, 0, 0]
+                    ],
+                    [
+                        [0, 1, 0, 0],
+                        [0, 1, 0, 0],
+                        [0, 1, 0, 0],
+                        [0, 1, 0, 0]
+                    ]
+                ]
+            },
+            O: {
+                id: 'O',
+                color: '#f59e0b',       // Radiant Pi Gold
+                light: '#fde047',
+                dark: '#b45309',
+                glow: 'rgba(251, 191, 36, 0.65)',
+                hasPiSymbol: true,
+                states: [
+                    [
+                        [0, 1, 1, 0],
+                        [0, 1, 1, 0],
+                        [0, 0, 0, 0]
+                    ],
+                    [
+                        [0, 1, 1, 0],
+                        [0, 1, 1, 0],
+                        [0, 0, 0, 0]
+                    ],
+                    [
+                        [0, 1, 1, 0],
+                        [0, 1, 1, 0],
+                        [0, 0, 0, 0]
+                    ],
+                    [
+                        [0, 1, 1, 0],
+                        [0, 1, 1, 0],
+                        [0, 0, 0, 0]
+                    ]
+                ]
+            },
+            T: {
+                id: 'T',
+                color: '#a855f7',       // Vivid Pi Network Purple / Amethyst
+                light: '#e879f9',
+                dark: '#6b21a8',
+                glow: 'rgba(192, 38, 211, 0.75)',
+                hasPiSymbol: true,
+                states: [
+                    [
+                        [0, 1, 0],
+                        [1, 1, 1],
+                        [0, 0, 0]
+                    ],
+                    [
+                        [0, 1, 0],
+                        [0, 1, 1],
+                        [0, 1, 0]
+                    ],
+                    [
+                        [0, 0, 0],
+                        [1, 1, 1],
+                        [0, 1, 0]
+                    ],
+                    [
+                        [0, 1, 0],
+                        [1, 1, 0],
+                        [0, 1, 0]
+                    ]
+                ]
+            },
+            S: {
+                id: 'S',
+                color: '#10b981',       // Neon Emerald
+                light: '#6ee7b7',
+                dark: '#047857',
+                glow: 'rgba(16, 185, 129, 0.6)',
+                states: [
+                    [
+                        [0, 1, 1],
+                        [1, 1, 0],
+                        [0, 0, 0]
+                    ],
+                    [
+                        [0, 1, 0],
+                        [0, 1, 1],
+                        [0, 0, 1]
+                    ],
+                    [
+                        [0, 0, 0],
+                        [0, 1, 1],
+                        [1, 1, 0]
+                    ],
+                    [
+                        [1, 0, 0],
+                        [1, 1, 0],
+                        [0, 1, 0]
+                    ]
+                ]
+            },
+            Z: {
+                id: 'Z',
+                color: '#f43f5e',       // Crimson Ruby
+                light: '#fda4af',
+                dark: '#be123c',
+                glow: 'rgba(244, 63, 94, 0.6)',
+                states: [
+                    [
+                        [1, 1, 0],
+                        [0, 1, 1],
+                        [0, 0, 0]
+                    ],
+                    [
+                        [0, 0, 1],
+                        [0, 1, 1],
+                        [0, 1, 0]
+                    ],
+                    [
+                        [0, 0, 0],
+                        [1, 1, 0],
+                        [0, 1, 1]
+                    ],
+                    [
+                        [0, 1, 0],
+                        [1, 1, 0],
+                        [1, 0, 0]
+                    ]
+                ]
+            },
+            J: {
+                id: 'J',
+                color: '#3b82f6',       // Royal Blue
+                light: '#93c5fd',
+                dark: '#1d4ed8',
+                glow: 'rgba(59, 130, 246, 0.6)',
+                states: [
+                    [
+                        [1, 0, 0],
+                        [1, 1, 1],
+                        [0, 0, 0]
+                    ],
+                    [
+                        [0, 1, 1],
+                        [0, 1, 0],
+                        [0, 1, 0]
+                    ],
+                    [
+                        [0, 0, 0],
+                        [1, 1, 1],
+                        [0, 0, 1]
+                    ],
+                    [
+                        [0, 1, 0],
+                        [0, 1, 0],
+                        [1, 1, 0]
+                    ]
+                ]
+            },
+            L: {
+                id: 'L',
+                color: '#f97316',       // Solar Orange
+                light: '#fdba74',
+                dark: '#c2410c',
+                glow: 'rgba(249, 115, 22, 0.6)',
+                states: [
+                    [
+                        [0, 0, 1],
+                        [1, 1, 1],
+                        [0, 0, 0]
+                    ],
+                    [
+                        [0, 1, 0],
+                        [0, 1, 0],
+                        [0, 1, 1]
+                    ],
+                    [
+                        [0, 0, 0],
+                        [1, 1, 1],
+                        [1, 0, 0]
+                    ],
+                    [
+                        [1, 1, 0],
+                        [0, 1, 0],
+                        [0, 1, 0]
+                    ]
+                ]
+            },
+            // Garbage / Preset Gray-Purple Block for T-Spin Practice Overhangs
+            G: {
+                id: 'G',
+                color: '#64748b',
+                light: '#cbd5e1',
+                dark: '#334155',
+                glow: 'rgba(148, 163, 184, 0.4)'
+            }
+        };
+
+        /**
+         * Official Super Rotation System (SRS) Wall Kick Offsets
+         * Note: In standard SRS tables, +Y is UP. Since our grid has +Y as DOWN,
+         * we invert the Y offsets here so [dx, dy] directly applies to board coordinates!
+         */
+        const JLSTZ_KICKS = {
+            '0->1': [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+            '1->0': [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+            '1->2': [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+            '2->1': [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+            '2->3': [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+            '3->2': [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
+            '3->0': [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
+            '0->3': [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]]
+        };
+
+        const I_KICKS = {
+            '0->1': [[0, 0], [-2, 0], [1, 0], [-2, 1], [1, -2]],
+            '1->0': [[0, 0], [2, 0], [-1, 0], [2, -1], [-1, 2]],
+            '1->2': [[0, 0], [-1, 0], [2, 0], [-1, -2], [2, 1]],
+            '2->1': [[0, 0], [1, 0], [-2, 0], [1, 2], [-2, -1]],
+            '2->3': [[0, 0], [2, 0], [-1, 0], [2, -1], [-1, 2]],
+            '3->2': [[0, 0], [-2, 0], [1, 0], [-2, 1], [1, -2]],
+            '3->0': [[0, 0], [1, 0], [-2, 0], [1, 2], [-2, -1]],
+            '0->3': [[0, 0], [-1, 0], [2, 0], [-1, -2], [2, 1]]
+        };
+
+        /**************************************************************************
+         * 3. GAME STATE & PARTICLE EFFECTS ENGINE
+         **************************************************************************/
+        const gameCanvas = document.getElementById('gameCanvas');
+        const ctx = gameCanvas.getContext('2d');
+        const holdCanvas = document.getElementById('holdCanvas');
+        const holdCtx = holdCanvas.getContext('2d');
+        const nextCanvas = document.getElementById('nextCanvas');
+        const nextCtx = nextCanvas.getContext('2d');
+
+        let grid = [];
+        let bag = [];
+        let nextQueue = [];
+        let currentPiece = null;
+        let holdPieceId = null;
+        let canHold = true;
+
+        // Scoring & Progression
+        let score = 0;
+        let piMined = 0.0;
+        let linesClearedTotal = 0;
+        let level = 1;
+        let tSpinsCount = 0;
+        let comboCount = -1;
+        let b2bCount = 0;
+        let blitzMeter = 12; // 0 to 100%
+        let burstCount = 0;
+
+        // Timing & Lock Delay (Guideline 500ms lock delay so players can twist T-pieces!)
+        let gameState = 'MENU'; // 'MENU', 'PLAYING', 'PAUSED', 'GAMEOVER'
+        let lastFrameTime = 0;
+        let dropAccumulator = 0;
+        let lockTimer = 0;
+        let lockMoveResets = 0;
+        const LOCK_DELAY_MS = 520;
+        const MAX_LOCK_RESETS = 15;
+
+        // T-Spin Tracking State
+        let lastMoveWasRotation = false;
+        let lastKickIndex = 0;
+
+        // Canvas Visual Particles
+        let particles = [];
+        let lineFlashRows = [];
+        let lineFlashTimer = 0;
+
+        function createEmptyGrid() {
+            const arr = [];
+            for (let r = 0; r < ROWS + HIDDEN_ROWS; r++) {
+                arr.push(new Array(COLS).fill(null));
+            }
+            return arr;
+        }
+
+        // 7-Bag Randomizer
+        function refillBag() {
+            const types = ['I', 'O', 'T', 'S', 'Z', 'J', 'L'];
+            for (let i = types.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [types[i], types[j]] = [types[j], types[i]];
+            }
+            bag.push(...types);
+        }
+
+        function pullFromBag() {
+            if (bag.length < 7) refillBag();
+            return bag.shift();
+        }
+
+        function initQueues() {
+            bag = [];
+            nextQueue = [];
+            refillBag();
+            for (let i = 0; i < 4; i++) {
+                nextQueue.push(pullFromBag());
+            }
+        }
+
+        function spawnPiece(forcedId = null) {
+            const id = forcedId || nextQueue.shift();
+            if (!forcedId) {
+                nextQueue.push(pullFromBag());
+            }
+            const def = PIECES[id];
+            const matrixSize = def.states[0].length;
+            currentPiece = {
+                id: id,
+                def: def,
+                rot: 0,
+                matrix: def.states[0],
+                x: Math.floor((COLS - matrixSize) / 2),
+                y: 0 // Spawns in the top buffer area
+            };
+
+            lastMoveWasRotation = false;
+            lastKickIndex = 0;
+            lockTimer = 0;
+            lockMoveResets = 0;
+
+            // Check immediate collision for Game Over
+            if (collides(currentPiece.matrix, currentPiece.x, currentPiece.y)) {
+                triggerGameOver();
+            }
+
+            renderSideCanvases();
+        }
+
+        function collides(matrix, offsetX, offsetY) {
+            for (let r = 0; r < matrix.length; r++) {
+                for (let c = 0; c < matrix[r].length; c++) {
+                    if (matrix[r][c]) {
+                        const nx = offsetX + c;
+                        const ny = offsetY + r;
+                        if (nx < 0 || nx >= COLS || ny >= ROWS + HIDDEN_ROWS) {
+                            return true;
+                        }
+                        if (ny >= 0 && grid[ny][nx] !== null) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function isOnGround() {
+            if (!currentPiece) return false;
+            return collides(currentPiece.matrix, currentPiece.x, currentPiece.y + 1);
+        }
+
+        function resetLockDelayIfGrounded() {
+            if (isOnGround() && lockMoveResets < MAX_LOCK_RESETS) {
+                lockTimer = 0;
+                lockMoveResets++;
+            }
+        }
+
+        /**************************************************************************
+         * 4. MOVEMENT, SRS ROTATION & 3-CORNER T-SPIN DETECTION
+         **************************************************************************/
+        function moveHorizontal(dir) {
+            if (gameState !== 'PLAYING' || !currentPiece) return false;
+            if (!collides(currentPiece.matrix, currentPiece.x + dir, currentPiece.y)) {
+                currentPiece.x += dir;
+                lastMoveWasRotation = false;
+                resetLockDelayIfGrounded();
+                sound.move();
+                return true;
+            }
+            return false;
+        }
+
+        function softDropStep(userTriggered = false) {
+            if (gameState !== 'PLAYING' || !currentPiece) return false;
+            if (!collides(currentPiece.matrix, currentPiece.x, currentPiece.y + 1)) {
+                currentPiece.y += 1;
+                lastMoveWasRotation = false;
+                if (userTriggered) {
+                    score += 1;
+                    sound.softDrop();
+                    updateHUD();
+                }
+                return true;
+            }
+            return false;
+        }
+
+        function getGhostY() {
+            if (!currentPiece) return 0;
+            let gy = currentPiece.y;
+            while (!collides(currentPiece.matrix, currentPiece.x, gy + 1)) {
+                gy++;
+            }
+            return gy;
+        }
+
+        function hardDrop() {
+            if (gameState !== 'PLAYING' || !currentPiece) return;
+            let cellsDropped = 0;
+            while (!collides(currentPiece.matrix, currentPiece.x, currentPiece.y + 1)) {
+                currentPiece.y++;
+                cellsDropped++;
+            }
+            if (cellsDropped > 0) {
+                // Note: If the player rotated right before pressing spacebar at the bottom,
+                // cellsDropped is 0 so lastMoveWasRotation stays TRUE!
+                lastMoveWasRotation = false;
+                score += cellsDropped * 2;
+            }
+
+            // Spawn energetic drop particles
+            spawnPieceParticles(currentPiece, '#fbbf24', 10);
+
+            // Board bump animation
+            const wrapper = document.getElementById('boardWrapper');
+            wrapper.classList.remove('board-drop-bump');
+            void wrapper.offsetWidth;
+            wrapper.classList.add('board-drop-bump');
+
+            sound.hardDrop();
+            lockPiece();
+        }
+
+        /**
+         * Super Rotation System (SRS) with full Wall & Floor Kicks
+         * dir: +1 for Clockwise, -1 for Counter-Clockwise
+         */
+        function rotatePiece(dir) {
+            if (gameState !== 'PLAYING' || !currentPiece) return;
+
+            const oldRot = currentPiece.rot;
+            const newRot = (oldRot + dir + 4) % 4;
+            const newMatrix = currentPiece.def.states[newRot];
+
+            // Select appropriate kick table
+            const key = `${oldRot}->${newRot}`;
+            let kicks = [[0, 0]];
+            if (currentPiece.id === 'I') {
+                kicks = I_KICKS[key] || [[0, 0]];
+            } else if (currentPiece.id !== 'O') {
+                kicks = JLSTZ_KICKS[key] || [[0, 0]];
+            }
+
+            for (let i = 0; i < kicks.length; i++) {
+                const [dx, dy] = kicks[i];
+                if (!collides(newMatrix, currentPiece.x + dx, currentPiece.y + dy)) {
+                    currentPiece.x += dx;
+                    currentPiece.y += dy;
+                    currentPiece.rot = newRot;
+                    currentPiece.matrix = newMatrix;
+                    lastMoveWasRotation = true;
+                    lastKickIndex = i;
+                    resetLockDelayIfGrounded();
+
+                    // Check if this rotation just slotted a T-piece into a 3-corner T-Spin spot!
+                    const tspinPreview = evaluateTSpin();
+                    if (tspinPreview.isTSpin || tspinPreview.isMini) {
+                        sound.rotate(true);
+                        spawnPieceParticles(currentPiece, '#e879f9', 14);
+                    } else {
+                        sound.rotate(false);
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Official 3-Corner T-Spin Detection Algorithm
+         * Checks the 4 diagonal corners around the T-piece center:
+         * (cx-1, cy-1), (cx+1, cy-1), (cx-1, cy+1), (cx+1, cy+1)
+         */
+        function evaluateTSpin() {
+            if (!currentPiece || currentPiece.id !== 'T' || !lastMoveWasRotation) {
+                return { isTSpin: false, isMini: false };
+            }
+
+            // Center of 3x3 T matrix is at local (1, 1)
+            const cx = currentPiece.x + 1;
+            const cy = currentPiece.y + 1;
+
+            const isOccupied = (x, y) => {
+                if (x < 0 || x >= COLS || y >= ROWS + HIDDEN_ROWS) return true; // Walls & Floor count as occupied corners!
+                if (y < 0) return false;
+                return grid[y][x] !== null;
+            };
+
+            // Corners: TL (0), TR (1), BR (2), BL (3)
+            const corners = [
+                isOccupied(cx - 1, cy - 1), // Top-Left
+                isOccupied(cx + 1, cy - 1), // Top-Right
+                isOccupied(cx + 1, cy + 1), // Bottom-Right
+                isOccupied(cx - 1, cy + 1)  // Bottom-Left
+            ];
+
+            const occupiedCount = corners.filter(Boolean).length;
+            if (occupiedCount < 3) {
+                return { isTSpin: false, isMini: false };
+            }
+
+            // Front corners based on T orientation (0: North, 1: East, 2: South, 3: West)
+            const frontIndices = [
+                [0, 1], // 0: North -> TL & TR are front
+                [1, 2], // 1: East  -> TR & BR are front
+                [2, 3], // 2: South -> BR & BL are front
+                [3, 0]  // 3: West  -> BL & TL are front
+            ][currentPiece.rot];
+
+            const frontFilled = (corners[frontIndices[0]] ? 1 : 0) + (corners[frontIndices[1]] ? 1 : 0);
+
+            // Guideline Rule: If both front corners are filled OR if the 5th SRS kick (index 4, the TST kick) was used, it's a FULL T-Spin!
+            if (frontFilled === 2 || lastKickIndex === 4) {
+                return { isTSpin: true, isMini: false };
+            } else {
+                return { isTSpin: false, isMini: true };
+            }
+        }
+
+        function holdCurrentPiece() {
+            if (gameState !== 'PLAYING' || !currentPiece || !canHold) return;
+            sound.hold();
+            const currentId = currentPiece.id;
+            if (holdPieceId === null) {
+                holdPieceId = currentId;
+                spawnPiece();
+            } else {
+                const swapId = holdPieceId;
+                holdPieceId = currentId;
+                spawnPiece(swapId);
+            }
+            canHold = false;
+            renderSideCanvases();
+        }
+
+        /**************************************************************************
+         * 5. LOCKING PIECES, LINE CLEARS, COMBOS & TETRIS BATTLE CALLOUTS
+         **************************************************************************/
+        function lockPiece() {
+            if (!currentPiece) return;
+
+            // Evaluate T-Spin BEFORE merging piece into grid
+            const tspinStatus = evaluateTSpin();
+
+            // Merge piece into grid
+            const mat = currentPiece.matrix;
+            for (let r = 0; r < mat.length; r++) {
+                for (let c = 0; c < mat[r].length; c++) {
+                    if (mat[r][c]) {
+                        const gx = currentPiece.x + c;
+                        const gy = currentPiece.y + r;
+                        if (gy >= 0 && gy < ROWS + HIDDEN_ROWS && gx >= 0 && gx < COLS) {
+                            grid[gy][gx] = currentPiece.id;
+                        }
+                    }
+                }
+            }
+
+            // Check if piece locked entirely above visible playfield
+            if (currentPiece.y < 1 && collides(currentPiece.matrix, currentPiece.x, currentPiece.y)) {
+                triggerGameOver();
+                return;
+            }
+
+            // Detect completed lines
+            const completedRows = [];
+            for (let r = 0; r < ROWS + HIDDEN_ROWS; r++) {
+                if (grid[r].every(cell => cell !== null)) {
+                    completedRows.push(r);
+                }
+            }
+
+            const lines = completedRows.length;
+
+            // Remove completed rows & insert empty rows at top
+            if (lines > 0) {
+                lineFlashRows = completedRows.map(r => r - HIDDEN_ROWS);
+                lineFlashTimer = 180;
+
+                // Spawn burst particles along cleared lines
+                completedRows.forEach(r => {
+                    const visRow = r - HIDDEN_ROWS;
+                    if (visRow >= 0) {
+                        for (let c = 0; c < COLS; c++) {
+                            spawnCellParticles(c, visRow, PIECES[grid[r][c]]?.color || '#fbbf24', 4);
+                        }
+                    }
+                });
+
+                for (let i = completedRows.length - 1; i >= 0; i--) {
+                    grid.splice(completedRows[i], 1);
+                }
+                while (grid.length < ROWS + HIDDEN_ROWS) {
+                    grid.unshift(new Array(COLS).fill(null));
+                }
+            }
+
+            // Process Scoring, T-Spins, Back-to-Back, Combos & Floating Callouts
+            processTurnRewards(lines, tspinStatus);
+
+            canHold = true;
+            spawnPiece();
+        }
+
+        function isBoardEmpty() {
+            for (let r = 0; r < ROWS + HIDDEN_ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    if (grid[r][c] !== null) return false;
+                }
+            }
+            return true;
+        }
+
+        function processTurnRewards(lines, tspinStatus) {
+            const { isTSpin, isMini } = tspinStatus;
+            let basePoints = 0;
+            let piBonus = 0;
+            let primaryTitle = '';
+            let subTitle = '';
+            let badgeColor = 'gold';
+            let isDifficultClear = false;
+
+            if (isTSpin) {
+                tSpinsCount++;
+                badgeColor = 'tspin';
+                // Pulse board border with golden-purple T-Spin aura
+                const wrapper = document.getElementById('boardWrapper');
+                wrapper.classList.remove('board-tspin-glow');
+                void wrapper.offsetWidth;
+                wrapper.classList.add('board-tspin-glow');
+
+                if (lines === 0) {
+                    basePoints = 400;
+                    piBonus = 0.25;
+                    primaryTitle = 'T-SPIN!';
+                } else if (lines === 1) {
+                    basePoints = 800;
+                    piBonus = 0.85;
+                    primaryTitle = 'T-SPIN SINGLE!';
+                    isDifficultClear = true;
+                } else if (lines === 2) {
+                    basePoints = 1200;
+                    piBonus = 1.60;
+                    primaryTitle = 'T-SPIN DOUBLE!';
+                    isDifficultClear = true;
+                } else if (lines >= 3) {
+                    basePoints = 1600;
+                    piBonus = 3.14; // 3.14 Pi Bonus for T-Spin Triple!
+                    primaryTitle = 'T-SPIN TRIPLE!';
+                    isDifficultClear = true;
+                }
+            } else if (isMini) {
+                tSpinsCount++;
+                badgeColor = 'tspin';
+                if (lines === 0) {
+                    basePoints = 100;
+                    piBonus = 0.10;
+                    primaryTitle = 'T-SPIN MINI!';
+                } else if (lines === 1) {
+                    basePoints = 200;
+                    piBonus = 0.35;
+                    primaryTitle = 'T-SPIN MINI SINGLE!';
+                    isDifficultClear = true;
+                } else if (lines === 2) {
+                    basePoints = 400;
+                    piBonus = 0.75;
+                    primaryTitle = 'T-SPIN MINI DOUBLE!';
+                    isDifficultClear = true;
+                }
+            } else {
+                // Standard Line Clears
+                if (lines === 1) {
+                    basePoints = 100;
+                    piBonus = 0.10;
+                    primaryTitle = 'SINGLE';
+                } else if (lines === 2) {
+                    basePoints = 300;
+                    piBonus = 0.25;
+                    primaryTitle = 'DOUBLE!';
+                } else if (lines === 3) {
+                    basePoints = 500;
+                    piBonus = 0.50;
+                    primaryTitle = 'TRIPLE!';
+                } else if (lines >= 4) {
+                    basePoints = 800;
+                    piBonus = 1.25;
+                    primaryTitle = 'TETRIS!';
+                    subTitle = '4-LINE PI BLAST';
+                    badgeColor = 'gold';
+                    isDifficultClear = true;
+                }
+            }
+
+            // Back-to-Back (B2B) Chain Logic (consecutive Tetris or T-Spin line clears)
+            if (lines > 0) {
+                if (isDifficultClear) {
+                    b2bCount++;
+                    if (b2bCount > 1) {
+                        basePoints = Math.floor(basePoints * 1.5);
+                        piBonus *= 1.5;
+                        subTitle = `BACK-TO-BACK x${b2bCount - 1}!`;
+                    }
+                } else {
+                    b2bCount = 0; // Broken by standard Single/Double/Triple
+                }
+
+                // Combo Counter
+                comboCount++;
+                if (comboCount >= 1) {
+                    const comboPts = 50 * comboCount * level;
+                    basePoints += comboPts;
+                    piBonus += 0.08 * comboCount;
+                }
+
+                // Check Perfect Clear (All Clear)
+                if (isBoardEmpty()) {
+                    basePoints += 3000;
+                    piBonus += 5.0;
+                    showActionCallout('PERFECT CLEAR!', '+5.00 π JACKPOT!', 'perfect');
+                }
+
+                linesClearedTotal += lines;
+                level = Math.min(20, Math.floor(linesClearedTotal / 10) + 1);
+                sound.lineClear(lines, comboCount, isTSpin || isMini);
+            } else {
+                // No lines cleared on this drop
+                comboCount = -1;
+            }
+
+            // Apply Score & Pi Mined
+            const totalTurnPoints = basePoints * level;
+            score += totalTurnPoints;
+            piMined += piBonus;
+
+            // Update Blitz Fever Bar
+            if (lines > 0 || isTSpin || isMini) {
+                const blitzGain = (lines * 12) + (isTSpin ? 28 : 0) + (Math.max(0, comboCount) * 6);
+                blitzMeter += blitzGain;
+                if (blitzMeter >= 100) {
+                    blitzMeter = blitzMeter % 100;
+                    burstCount++;
+                    piMined += 1.0;
+                    showActionCallout('π OVERDRIVE BURST!', `KO BLITZ #${burstCount}`, 'gold');
+                }
+            }
+
+            // Trigger Floating Callout Banner (for T-Spins, Tetris, Double/Triple, or Combos)
+            if (primaryTitle && (isTSpin || isMini || lines >= 2)) {
+                showActionCallout(primaryTitle, subTitle || `+${totalTurnPoints} PTS`, badgeColor);
+                document.getElementById('lastTrickText').textContent = primaryTitle;
+            } else if (comboCount >= 1) {
+                showActionCallout(`COMBO x${comboCount}!`, `+${totalTurnPoints} PTS`, 'combo');
+                document.getElementById('lastTrickText').textContent = `COMBO x${comboCount}`;
+            } else if (lines === 1) {
+                document.getElementById('lastTrickText').textContent = 'SINGLE CLEAR';
+            }
+
+            updateHUD();
+        }
+
+        function showActionCallout(mainText, subText, styleType = 'gold') {
+            const overlay = document.getElementById('calloutOverlay');
+            const el = document.createElement('div');
+
+            let gradientClasses = 'from-amber-300 via-amber-400 to-orange-500 text-purple-950 border-yellow-200';
+            if (styleType === 'tspin') {
+                gradientClasses = 'from-fuchsia-400 via-purple-500 to-amber-400 text-white border-amber-300';
+            } else if (styleType === 'combo') {
+                gradientClasses = 'from-cyan-300 via-blue-500 to-purple-600 text-white border-cyan-200';
+            } else if (styleType === 'perfect') {
+                gradientClasses = 'from-emerald-300 via-amber-300 to-fuchsia-400 text-purple-950 border-white';
+            }
+
+            el.className = `action-callout-anim my-1 px-3.5 py-1.5 rounded-2xl bg-gradient-to-r ${gradientClasses} border-2 shadow-[0_0_25px_rgba(251,191,36,0.75)] text-center`;
+            el.innerHTML = `
+                <div class="font-arcade font-black text-xs sm:text-base tracking-wider drop-shadow">${mainText}</div>
+                ${subText ? `<div class="text-[9px] sm:text-[11px] font-extrabold uppercase tracking-widest opacity-95">${subText}</div>` : ''}
+            `;
+
+            overlay.appendChild(el);
+            setTimeout(() => {
+                if (el.parentNode) el.remove();
+            }, 1450);
+        }
+
+        /**************************************************************************
+         * 6. INSTANT T-SPIN DOUBLE PRACTICE SETUP GENERATOR
+         **************************************************************************/
+        function loadTSpinPracticeBoard() {
+            sound.init();
+            grid = createEmptyGrid();
+
+            // Build a classic, clean T-Spin Double (TSD) overhang at the bottom of the board
+            // Rows 17, 18, 19 (which are indices ROWS+HIDDEN_ROWS - 3, -2, -1)
+            const b1 = ROWS + HIDDEN_ROWS - 1; // Bottom row
+            const b2 = ROWS + HIDDEN_ROWS - 2; // Second from bottom
+            const b3 = ROWS + HIDDEN_ROWS - 3; // Overhang row
+
+            // Bottom row: all filled except center column 4
+            for (let c = 0; c < COLS; c++) {
+                if (c !== 4) grid[b1][c] = (c < 4) ? 'J' : 'L';
+            }
+            // Second row from bottom: all filled except columns 3, 4, 5 (the 3-wide T slot)
+            for (let c = 0; c < COLS; c++) {
+                if (c < 3 || c > 5) grid[b2][c] = (c < 3) ? 'S' : 'Z';
+            }
+            // Third row (overhang): fill left side and column 3 (creating the T-Spin overhang lip!)
+            grid[b3][0] = 'I';
+            grid[b3][1] = 'I';
+            grid[b3][2] = 'O';
+            grid[b3][3] = 'O'; // <- Overhang block over column 3!
+            grid[b3][6] = 'G';
+            grid[b3][7] = 'G';
+            grid[b3][8] = 'G';
+            grid[b3][9] = 'G';
+
+            // Spawn a T-Piece immediately and put another T-piece in Next queue!
+            if (gameState !== 'PLAYING') {
+                startNewGame(false);
+                // Re-apply setup after startNewGame clears grid
+                return loadTSpinPracticeBoard();
+            }
+
+            nextQueue[0] = 'T';
+            spawnPiece('T');
+            showActionCallout('T-SPIN DOJO!', 'DROP RIGHT OF LIP & SPIN!', 'tspin');
+            sound.rotate(true);
+            updateHUD();
+        }
+
+        /**************************************************************************
+         * 7. RENDERING ENGINE (Glossy Beveled Gem Blocks & Pi Watermarks)
+         **************************************************************************/
+        function drawBeveledBlock(context, x, y, size, pieceDef, alpha = 1.0, isGhost = false) {
+            context.save();
+            context.globalAlpha = alpha;
+
+            const px = x * size;
+            const py = y * size;
+            const pad = 1;
+            const w = size - pad * 2;
+            const h = size - pad * 2;
+
+            if (isGhost) {
+                context.strokeStyle = pieceDef.light;
+                context.lineWidth = 2;
+                context.fillStyle = pieceDef.glow;
+                context.beginPath();
+                context.roundRect(px + 2, py + 2, size - 4, size - 4, 5);
+                context.fill();
+                context.stroke();
+                context.restore();
+                return;
+            }
+
+            // Base Gradient Fill
+            const grad = context.createLinearGradient(px, py, px + w, py + h);
+            grad.addColorStop(0, pieceDef.light);
+            grad.addColorStop(0.45, pieceDef.color);
+            grad.addColorStop(1, pieceDef.dark);
+
+            context.fillStyle = grad;
+            context.beginPath();
+            context.roundRect(px + pad, py + pad, w, h, 5);
+            context.fill();
+
+            // Top-Left Arcade Gloss Highlight
+            context.fillStyle = 'rgba(255, 255, 255, 0.35)';
+            context.beginPath();
+            context.roundRect(px + pad + 2, py + pad + 2, w - 4, h * 0.38, 3);
+            context.fill();
+
+            // Inner Bevel Frame
+            context.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+            context.lineWidth = 1;
+            context.strokeRect(px + pad + 1.5, py + pad + 1.5, w - 3, h - 3);
+
+            // Subtle Pi (π) Watermark on T and O blocks
+            if (pieceDef.hasPiSymbol && size >= 20) {
+                context.fillStyle = 'rgba(255, 255, 255, 0.75)';
+                context.font = `900 ${Math.floor(size * 0.48)}px Orbitron, sans-serif`;
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText('π', px + size / 2, py + size / 2 + 1);
+            }
+
+            context.restore();
+        }
+
+        function spawnPieceParticles(piece, color, count = 10) {
+            const cellW = gameCanvas.width / COLS;
+            const mat = piece.matrix;
+            for (let r = 0; r < mat.length; r++) {
+                for (let c = 0; c < mat[r].length; c++) {
+                    if (mat[r][c]) {
+                        const visY = piece.y + r - HIDDEN_ROWS;
+                        if (visY >= 0) {
+                            spawnCellParticles(piece.x + c, visY, color, Math.ceil(count / 4));
+                        }
+                    }
+                }
+            }
+        }
+
+        function spawnCellParticles(col, visRow, color, count = 4) {
+            const cellSize = gameCanvas.width / COLS;
+            const cx = (col + 0.5) * cellSize;
+            const cy = (visRow + 0.5) * cellSize;
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 1.2 + Math.random() * 3.8;
+                particles.push({
+                    x: cx,
+                    y: cy,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed - 1.0,
+                    size: 2.5 + Math.random() * 3.5,
+                    color: color,
+                    alpha: 1.0,
+                    decay: 0.022 + Math.random() * 0.02
+                });
+            }
+        }
+
+        function renderMainBoard() {
+            const width = gameCanvas.width;
+            const height = gameCanvas.height;
+            const cellSize = width / COLS;
+
+            ctx.clearRect(0, 0, width, height);
+
+            // 1. Subtle Cosmic Grid Lines
+            ctx.strokeStyle = 'rgba(139, 92, 246, 0.12)';
+            ctx.lineWidth = 1;
+            for (let c = 1; c < COLS; c++) {
+                ctx.beginPath();
+                ctx.moveTo(c * cellSize, 0);
+                ctx.lineTo(c * cellSize, height);
+                ctx.stroke();
+            }
+            for (let r = 1; r < ROWS; r++) {
+                ctx.beginPath();
+                ctx.moveTo(0, r * cellSize);
+                ctx.lineTo(width, r * cellSize);
+                ctx.stroke();
+            }
+
+            // Center Pi Watermark on Canvas Playfield
+            ctx.save();
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.035)';
+            ctx.font = '900 140px Orbitron, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('π', width / 2, height / 2);
+            ctx.restore();
+
+            // 2. Locked Grid Blocks
+            for (let r = HIDDEN_ROWS; r < ROWS + HIDDEN_ROWS; r++) {
+                const visRow = r - HIDDEN_ROWS;
+                for (let c = 0; c < COLS; c++) {
+                    const cellId = grid[r][c];
+                    if (cellId && PIECES[cellId]) {
+                        drawBeveledBlock(ctx, c, visRow, cellSize, PIECES[cellId]);
+                    }
+                }
+            }
+
+            // 3. Active Piece & Ghost Piece
+            if (currentPiece && gameState === 'PLAYING') {
+                const ghostY = getGhostY();
+                const mat = currentPiece.matrix;
+
+                // Draw Ghost Landing Preview
+                for (let r = 0; r < mat.length; r++) {
+                    for (let c = 0; c < mat[r].length; c++) {
+                        if (mat[r][c]) {
+                            const visGhostY = ghostY + r - HIDDEN_ROWS;
+                            if (visGhostY >= 0) {
+                                drawBeveledBlock(ctx, currentPiece.x + c, visGhostY, cellSize, currentPiece.def, 0.38, true);
+                            }
+                        }
+                    }
+                }
+
+                // Draw Active Falling Piece
+                for (let r = 0; r < mat.length; r++) {
+                    for (let c = 0; c < mat[r].length; c++) {
+                        if (mat[r][c]) {
+                            const visY = currentPiece.y + r - HIDDEN_ROWS;
+                            if (visY >= 0) {
+                                drawBeveledBlock(ctx, currentPiece.x + c, visY, cellSize, currentPiece.def, 1.0, false);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 4. Line Clear Flash Effect
+            if (lineFlashTimer > 0 && lineFlashRows.length > 0) {
+                ctx.save();
+                ctx.fillStyle = `rgba(253, 224, 71, ${Math.min(0.75, lineFlashTimer / 180)})`;
+                lineFlashRows.forEach(visR => {
+                    if (visR >= 0) {
+                        ctx.fillRect(0, visR * cellSize, width, cellSize);
+                    }
+                });
+                ctx.restore();
+            }
+
+            // 5. Render Burst Particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.08; // subtle gravity
+                p.alpha -= p.decay;
+
+                if (p.alpha <= 0) {
+                    particles.splice(i, 1);
+                    continue;
+                }
+
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function drawMiniPiece(context, pieceId, centerX, centerY, cellSize = 18) {
+            if (!pieceId || !PIECES[pieceId]) return;
+            const def = PIECES[pieceId];
+            const mat = def.states[0];
+
+            // Compute bounding box of active cells to center accurately
+            let minR = 4, maxR = 0, minC = 4, maxC = 0;
+            for (let r = 0; r < mat.length; r++) {
+                for (let c = 0; c < mat[r].length; c++) {
+                    if (mat[r][c]) {
+                        if (r < minR) minR = r;
+                        if (r > maxR) maxR = r;
+                        if (c < minC) minC = c;
+                        if (c > maxC) maxC = c;
+                    }
+                }
+            }
+            const pieceW = (maxC - minC + 1) * cellSize;
+            const pieceH = (maxR - minR + 1) * cellSize;
+            const startX = (centerX - pieceW / 2) / cellSize - minC;
+            const startY = (centerY - pieceH / 2) / cellSize - minR;
+
+            for (let r = minR; r <= maxR; r++) {
+                for (let c = minC; c <= maxC; c++) {
+                    if (mat[r][c]) {
+                        drawBeveledBlock(context, startX + c, startY + r, cellSize, def, canHold || context !== holdCtx ? 1.0 : 0.45);
+                    }
+                }
+            }
+        }
+
+        function renderSideCanvases() {
+            // Render Hold Canvas
+            holdCtx.clearRect(0, 0, holdCanvas.width, holdCanvas.height);
+            if (holdPieceId) {
+                drawMiniPiece(holdCtx, holdPieceId, holdCanvas.width / 2, holdCanvas.height / 2, 18);
+            }
+
+            // Render Next 3 Pieces Queue
+            nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+            const slotHeight = nextCanvas.height / 3;
+            for (let i = 0; i < 3; i++) {
+                if (nextQueue[i]) {
+                    drawMiniPiece(nextCtx, nextQueue[i], nextCanvas.width / 2, slotHeight * i + slotHeight / 2, 17);
+                }
+            }
+        }
+
+        /**************************************************************************
+         * 8. HUD UPDATES & TETRIS BATTLE STAR PROGRESSION
+         **************************************************************************/
+        function updateHUD() {
+            document.getElementById('scoreVal').textContent = score.toLocaleString();
+            document.getElementById('piMinedVal').textContent = `${piMined.toFixed(2)} π`;
+            document.getElementById('levelVal').textContent = level;
+            document.getElementById('linesVal').textContent = linesClearedTotal;
+            document.getElementById('tspinsVal').textContent = tSpinsCount;
+
+            // Blitz & Fever Bars
+            const clampedBlitz = Math.min(100, Math.max(8, blitzMeter));
+            document.getElementById('blitzProgressBar').style.width = `${clampedBlitz}%`;
+            document.getElementById('verticalFeverBar').style.height = `${clampedBlitz}%`;
+            document.getElementById('koCounterBadge').textContent = `BURST: ${burstCount}`;
+
+            // Back-to-Back Badge
+            const b2bBadge = document.getElementById('b2bBadge');
+            const b2bVal = document.getElementById('b2bCountVal');
+            if (b2bCount > 1) {
+                b2bBadge.classList.remove('opacity-50');
+                b2bBadge.classList.add('border-amber-400', 'bg-amber-500/20');
+                b2bVal.textContent = `x${b2bCount - 1}`;
+            } else {
+                b2bBadge.classList.add('opacity-50');
+                b2bBadge.classList.remove('border-amber-400', 'bg-amber-500/20');
+                b2bVal.textContent = 'x0';
+            }
+
+            // Combo Badge
+            const comboBadge = document.getElementById('comboBadge');
+            const comboVal = document.getElementById('comboCountVal');
+            if (comboCount >= 1) {
+                comboBadge.classList.remove('opacity-50');
+                comboBadge.classList.add('border-cyan-400', 'bg-cyan-500/20');
+                comboVal.textContent = `x${comboCount}`;
+            } else {
+                comboBadge.classList.add('opacity-50');
+                comboBadge.classList.remove('border-cyan-400', 'bg-cyan-500/20');
+                comboVal.textContent = '0';
+            }
+
+            // Update Pioneer Rank & Stars (1 to 5 Stars based on Score & T-Spins)
+            const starsEarned = Math.min(5, 1 + Math.floor(score / 2500) + Math.min(2, tSpinsCount));
+            const starContainer = document.getElementById('starContainer');
+            let starsHTML = '';
+            for (let s = 1; s <= 5; s++) {
+                if (s <= starsEarned) {
+                    starsHTML += `<i class="fa-solid fa-star text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.85)]"></i>`;
+                } else {
+                    starsHTML += `<i class="fa-regular fa-star text-amber-400/35"></i>`;
+                }
+            }
+            starContainer.innerHTML = starsHTML;
+
+            const ranks = ['PIONEER MINER', 'CONTRIBUTOR', 'AMBASSADOR', 'NODE MASTER', 'π GRANDMASTER'];
+            document.getElementById('pioneerRankTitle').textContent = ranks[starsEarned - 1] || 'PIONEER MINER';
+        }
+
+        /**************************************************************************
+         * 9. MAIN GAME LOOP & LIFECYCLE CONTROLS
+         **************************************************************************/
+        function getDropInterval(lvl) {
+            // Classic arcade speed curve (ms per row)
+            return Math.max(75, 950 - (lvl - 1) * 65);
+        }
+
+        function startNewGame(withTspinPreset = false) {
+            sound.init();
+            grid = createEmptyGrid();
+            score = 0;
+            piMined = 0.0;
+            linesClearedTotal = 0;
+            level = 1;
+            tSpinsCount = 0;
+            comboCount = -1;
+            b2bCount = 0;
+            blitzMeter = 15;
+            burstCount = 0;
+            holdPieceId = null;
+            canHold = true;
+            particles = [];
+
+            initQueues();
+            gameState = 'PLAYING';
+
+            document.getElementById('boardModalOverlay').classList.add('hidden');
+            document.getElementById('finalScoreBox').classList.add('hidden');
+            document.getElementById('pauseIcon').className = 'fa-solid fa-pause text-sm';
+            document.getElementById('lastTrickText').textContent = 'GOOD LUCK!';
+
+            if (withTspinPreset) {
+                loadTSpinPracticeBoard();
+            } else {
+                spawnPiece();
+                updateHUD();
+            }
+
+            lastFrameTime = performance.now();
+            dropAccumulator = 0;
+        }
+
+        function togglePause() {
+            if (gameState === 'PLAYING') {
+                gameState = 'PAUSED';
+                const overlay = document.getElementById('boardModalOverlay');
+                overlay.classList.remove('hidden');
+                document.getElementById('overlayTitle').innerHTML = `GAME <span class="text-amber-400 gold-glow">PAUSED</span>`;
+                document.getElementById('overlaySubtitle').textContent = 'Take a breather, Pioneer! Ready to resume mining?';
+                document.getElementById('btnStartText').textContent = 'RESUME GAME';
+                document.getElementById('pauseIcon').className = 'fa-solid fa-play text-sm';
+            } else if (gameState === 'PAUSED') {
+                gameState = 'PLAYING';
+                document.getElementById('boardModalOverlay').classList.add('hidden');
+                document.getElementById('pauseIcon').className = 'fa-solid fa-pause text-sm';
+                lastFrameTime = performance.now();
+            }
+        }
+
+        function triggerGameOver() {
+            gameState = 'GAMEOVER';
+            sound.gameOver();
+            const overlay = document.getElementById('boardModalOverlay');
+            overlay.classList.remove('hidden');
+            document.getElementById('overlayTitle').innerHTML = `BLOCK <span class="text-rose-400">OVERFLOW!</span>`;
+            document.getElementById('overlaySubtitle').textContent = 'Great run, Pioneer! Check your mined π rewards below:';
+            document.getElementById('finalScoreBox').classList.remove('hidden');
+            document.getElementById('finalScoreVal').textContent = score.toLocaleString();
+            document.getElementById('finalPiVal').textContent = `+${piMined.toFixed(2)} π Mined (${tSpinsCount} T-Spins)`;
+            document.getElementById('btnStartText').textContent = 'PLAY AGAIN';
+        }
+
+        function gameLoop(timestamp) {
+            const dt = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+
+            if (lineFlashTimer > 0) {
+                lineFlashTimer = Math.max(0, lineFlashTimer - dt);
+            }
+
+            if (gameState === 'PLAYING' && currentPiece) {
+                const dropSpeed = getDropInterval(level);
+                dropAccumulator += dt;
+
+                if (dropAccumulator >= dropSpeed) {
+                    dropAccumulator %= dropSpeed;
+                    if (!collides(currentPiece.matrix, currentPiece.x, currentPiece.y + 1)) {
+                        currentPiece.y++;
+                        lastMoveWasRotation = false;
+                    }
+                }
+
+                // Handle Guideline Lock Delay when piece is resting on a surface
+                if (isOnGround()) {
+                    lockTimer += dt;
+                    if (lockTimer >= LOCK_DELAY_MS) {
+                        lockPiece();
+                    }
+                } else {
+                    lockTimer = 0;
+                }
+            }
+
+            renderMainBoard();
+            requestAnimationFrame(gameLoop);
+        }
+
+        /**************************************************************************
+         * 10. KEYBOARD & MOBILE TOUCH EVENT LISTENERS
+         **************************************************************************/
+        window.addEventListener('keydown', (e) => {
+            // Ignore shortcuts if a modal is open
+            if (!document.getElementById('modalTspinGuide').classList.contains('hidden') ||
+                !document.getElementById('modalDomainInfo').classList.contains('hidden')) {
+                if (e.key === 'Escape') {
+                    document.getElementById('modalTspinGuide').classList.add('hidden');
+                    document.getElementById('modalDomainInfo').classList.add('hidden');
+                }
+                return;
+            }
+
+            if (e.key === 'p' || e.key === 'P') {
+                e.preventDefault();
+                togglePause();
+                return;
+            }
+
+            if (gameState !== 'PLAYING') return;
+
+            switch (e.key) {
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    e.preventDefault();
+                    moveHorizontal(-1);
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    e.preventDefault();
+                    moveHorizontal(1);
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    e.preventDefault();
+                    softDropStep(true);
+                    break;
+                case 'ArrowUp':
+                case 'x':
+                case 'X':
+                case 'w':
+                case 'W':
+                    e.preventDefault();
+                    rotatePiece(1); // Clockwise
+                    break;
+                case 'z':
+                case 'Z':
+                case 'Control':
+                    e.preventDefault();
+                    rotatePiece(-1); // Counter-Clockwise
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    hardDrop();
+                    break;
+                case 'c':
+                case 'C':
+                case 'Shift':
+                    e.preventDefault();
+                    holdCurrentPiece();
+                    break;
+            }
+        });
+
+        // Helper for responsive touch + mouse buttons with optional auto-repeat for Left/Right/Down
+        function bindArcadeButton(btnId, actionFn, repeatable = false) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            let repeatTimer = null;
+            let repeatInterval = null;
+
+            const startAction = (e) => {
+                e.preventDefault();
+                btn.classList.add('active-press');
+                actionFn();
+                if (repeatable) {
+                    clearTimeout(repeatTimer);
+                    clearInterval(repeatInterval);
+                    repeatTimer = setTimeout(() => {
+                        repeatInterval = setInterval(() => {
+                            if (gameState === 'PLAYING') actionFn();
+                        }, 65);
+                    }, 170);
+                }
+            };
+
+            const endAction = () => {
+                btn.classList.remove('active-press');
+                clearTimeout(repeatTimer);
+                clearInterval(repeatInterval);
+            };
+
+            btn.addEventListener('pointerdown', startAction);
+            btn.addEventListener('pointerup', endAction);
+            btn.addEventListener('pointerleave', endAction);
+            btn.addEventListener('pointercancel', endAction);
+        }
+
+        bindArcadeButton('touchLeft', () => moveHorizontal(-1), true);
+        bindArcadeButton('touchRight', () => moveHorizontal(1), true);
+        bindArcadeButton('touchSoftDrop', () => softDropStep(true), true);
+        bindArcadeButton('touchRotateCCW', () => rotatePiece(-1), false);
+        bindArcadeButton('touchRotateCW', () => rotatePiece(1), false);
+        bindArcadeButton('touchHardDrop', () => hardDrop(), false);
+
+        document.getElementById('touchHold').addEventListener('click', () => holdCurrentPiece());
+        document.getElementById('touchTspinPreset').addEventListener('click', () => loadTSpinPracticeBoard());
+        document.getElementById('btnLoadTspinSetup').addEventListener('click', () => loadTSpinPracticeBoard());
+        document.getElementById('touchRestart').addEventListener('click', () => startNewGame(false));
+
+        // Start / Resume Overlay Buttons
+        document.getElementById('btnStartGame').addEventListener('click', () => {
+            if (gameState === 'PAUSED') {
+                togglePause();
+            } else {
+                startNewGame(false);
+            }
+        });
+
+        document.getElementById('btnPracticeTspinStart').addEventListener('click', () => {
+            startNewGame(true);
+        });
+
+        // Header Buttons & Modals
+        document.getElementById('btnPauseToggle').addEventListener('click', () => togglePause());
+
+        document.getElementById('btnSoundToggle').addEventListener('click', () => {
+            const isMuted = sound.toggleMute();
+            const icon = document.getElementById('soundIcon');
+            icon.className = isMuted ? 'fa-solid fa-volume-xmark text-sm text-rose-400' : 'fa-solid fa-volume-high text-sm text-amber-300';
+        });
+
+        // T-Spin Guide Modal
+        const modalTspin = document.getElementById('modalTspinGuide');
+        document.getElementById('btnTspinGuide').addEventListener('click', () => {
+            if (gameState === 'PLAYING') togglePause();
+            modalTspin.classList.remove('hidden');
+        });
+        document.getElementById('closeTspinGuide').addEventListener('click', () => modalTspin.classList.add('hidden'));
+        document.getElementById('btnTryTspinFromModal').addEventListener('click', () => {
+            modalTspin.classList.add('hidden');
+            startNewGame(true);
+        });
+
+        // GitHub & Domain Setup Modal
+        const modalDomain = document.getElementById('modalDomainInfo');
+        document.getElementById('btnDomainInfo').addEventListener('click', () => {
+            if (gameState === 'PLAYING') togglePause();
+            modalDomain.classList.remove('hidden');
+        });
+        document.getElementById('closeDomainInfo').addEventListener('click', () => modalDomain.classList.add('hidden'));
+        document.getElementById('btnCloseDomainBottom').addEventListener('click', () => modalDomain.classList.add('hidden'));
+
+        // Initialize Board & Start Render Loop on Window Load
+        window.onload = function () {
+            grid = createEmptyGrid();
+            initQueues();
+            renderSideCanvases();
+            updateHUD();
+            lastFrameTime = performance.now();
+            requestAnimationFrame(gameLoop);
+        };
+    </script>
+</body>
+</html>
